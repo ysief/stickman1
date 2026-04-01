@@ -1,163 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Stickman Bridge</title>
+
+<style>
+
+body{
+
+margin:0;
+background:#1a1c2c;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+color:white;
+font-family:sans-serif;
+
+}
+
+#loading-screen{
+
+position:fixed;
+width:100%;
+height:100%;
+background:black;
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:5;
+
+}
+
+.hidden{
+
+display:none;
+
+}
+
+.game-container{
+
+display:none;
+
+}
+
+.visible{
+
+display:block;
+
+}
+
+canvas{
+
+background:#111;
+border-radius:20px;
+
+}
+
+button{
+
+padding:15px 40px;
+font-size:18px;
+border:none;
+border-radius:40px;
+cursor:pointer;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="loading-screen">
+
+Loading...
+
+</div>
+
+
+<div id="landing-screen" class="hidden">
+
+<center>
+
+<h1>Stickman Bridge</h1>
+
+<button id="play-button">PLAY</button>
+
+</center>
+
+</div>
+
+
+<div class="game-container" id="game-wrap">
+
+<center>
+
+<canvas id="gameCanvas"></canvas>
+
+</center>
+
+</div>
+
+
 <script>
 
-const qs = id => document.getElementById(id);
+const loadingScreen=document.getElementById("loading-screen");
+const landing=document.getElementById("landing-screen");
+const playBtn=document.getElementById("play-button");
+const gameWrap=document.getElementById("game-wrap");
 
-const scoreEl = qs('score');
-const hsEl = qs('hs');
-const streakEl = qs('streak');
-const finalHsEl = qs('final-hs');
-const finalScoreEl = qs('final-score');
+const canvas=document.getElementById("gameCanvas");
+const ctx=canvas.getContext("2d");
 
-const landingScreen = qs('landing-screen');
-const gameOverScreen = qs('game-over-screen');
-const loadingScreen = qs('loading-screen');
-const gameWrap = qs('game-wrap');
-const playBtn = qs('play-button');
+canvas.width=400;
+canvas.height=600;
 
-const canvas = qs('gameCanvas');
-const ctx = canvas.getContext('2d');
+let phase="waiting";
+let stickLen=0;
+let stickAng=-90;
 
-let score = 0;
-let streak = 0;
-let highScore = 0;
+let heroX=70;
+let heroY=350;
 
-hsEl.innerText = highScore;
+let pillars=[
 
-let theme = {};
-
-function updateColors() {
-
-const style = getComputedStyle(document.body);
-
-theme = {
-
-pillar: style.getPropertyValue('--pillar-color'),
-hero: style.getPropertyValue('--hero-color'),
-stick: style.getPropertyValue('--stick-color'),
-scarf: style.getPropertyValue('--scarf-color'),
-perfect: style.getPropertyValue('--perfect-color'),
-text: style.getPropertyValue('--text-color'),
-button: style.getPropertyValue('--button-bg')
-
-};
-
-}
-
-updateColors();
-
-let phase = "waiting";
-
-let stickLen = 0;
-let stickAng = -90;
-let fallVel = 0;
-
-let heroX = 0;
-let heroY = 0;
-
-let pillars = [];
-
-let particles = [];
-let floatTexts = [];
-
-let camX = 0;
-let animId;
-
-const w = canvas.width = 400;
-const h = canvas.height = 600;
-
-const pHeight = 250;
-const hSize = 20;
-const pZone = 12;
-const maxStick = 330;
-
-function spawnText(x,y,text,color){
-
-floatTexts.push({
-
-x:x,
-y:y,
-txt:text,
-col:color,
-life:1
-
-});
-
-}
-
-function updateStreakUI(){
-
-streakEl.innerText = streak;
-
-if(streak>0){
-
-streakEl.classList.add("streak-active");
-
-}else{
-
-streakEl.classList.remove("streak-active");
-
-}
-
-}
-
-function initGame(){
-
-score=0;
-streak=0;
-
-scoreEl.innerText=score;
-
-updateStreakUI();
-
-phase="waiting";
-
-camX=0;
-
-stickLen=0;
-
-stickAng=-90;
-
-pillars=[
-
-{ x:0 , w:80 },
-
-{ x:180 , w:60 }
+{x:0,w:80},
+{x:200,w:60}
 
 ];
 
-heroX=pillars[0].w-10;
-
-heroY=h-pHeight;
-
-cancelAnimationFrame(animId);
-
-gameLoop();
-
-}
-
-window.addEventListener("load",()=>{
+window.onload=()=>{
 
 loadingScreen.classList.add("hidden");
-
-landingScreen.classList.remove("hidden");
-
-});
-
-playBtn.onclick=()=>{
-
-landingScreen.classList.add("hidden");
-
-gameWrap.classList.add("visible");
-
-initGame();
+landing.classList.remove("hidden");
 
 };
 
-window.startGame=()=>{
+playBtn.onclick=()=>{
 
-gameOverScreen.classList.add("hidden");
+landing.classList.add("hidden");
+gameWrap.classList.add("visible");
 
-initGame();
+gameLoop();
 
 };
 
@@ -166,7 +154,6 @@ window.addEventListener("pointerdown",()=>{
 if(phase==="waiting"){
 
 phase="stretching";
-
 stickLen=0;
 
 }
@@ -187,13 +174,7 @@ function update(){
 
 if(phase==="stretching"){
 
-stickLen+=3;
-
-if(stickLen>maxStick){
-
-phase="falling";
-
-}
+stickLen+=4;
 
 }
 
@@ -204,7 +185,6 @@ stickAng+=5;
 if(stickAng>=0){
 
 stickAng=0;
-
 phase="walking";
 
 }
@@ -213,87 +193,40 @@ phase="walking";
 
 else if(phase==="walking"){
 
-heroX+=4;
-
-let tip=pillars[0].x+pillars[0].w+stickLen;
-
-let next=pillars[1];
-
-if(tip>=next.x && tip<=next.x+next.w){
-
-if(heroX>=next.x+next.w-10){
-
-score++;
-
-scoreEl.innerText=score;
-
-phase="transition";
+heroX+=3;
 
 }
-
-}else{
-
-if(heroX>=tip){
-
-phase="gameover";
-
-endGame();
-
-}
-
-}
-
-}
-
-}
-
-function endGame(){
-
-if(score>highScore){
-
-highScore=score;
-
-}
-
-finalScoreEl.innerText=score;
-
-finalHsEl.innerText=highScore;
-
-hsEl.innerText=highScore;
-
-gameOverScreen.classList.remove("hidden");
 
 }
 
 function draw(){
 
-ctx.clearRect(0,0,w,h);
+ctx.clearRect(0,0,400,600);
 
 pillars.forEach(p=>{
 
-ctx.fillStyle=theme.pillar;
-
-ctx.fillRect(p.x,h-pHeight,p.w,pHeight);
+ctx.fillStyle="#444";
+ctx.fillRect(p.x,350,p.w,250);
 
 });
 
 ctx.save();
 
-ctx.translate(pillars[0].x+pillars[0].w,h-pHeight);
+ctx.translate(pillars[0].x+pillars[0].w,350);
 
 ctx.rotate(stickAng*Math.PI/180);
 
-ctx.fillStyle=theme.stick;
+ctx.fillStyle="yellow";
 
 ctx.fillRect(0,-4,stickLen,4);
 
 ctx.restore();
 
-ctx.fillStyle=theme.hero;
-
 ctx.beginPath();
 
-ctx.arc(heroX,heroY-10,6,0,Math.PI*2);
+ctx.arc(heroX,heroY,6,0,Math.PI*2);
+
+ctx.fillStyle="white";
 
 ctx.fill();
 
@@ -302,11 +235,13 @@ ctx.fill();
 function gameLoop(){
 
 update();
-
 draw();
 
-animId=requestAnimationFrame(gameLoop);
+requestAnimationFrame(gameLoop);
 
 }
 
 </script>
+
+</body>
+</html>
