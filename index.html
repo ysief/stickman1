@@ -338,13 +338,13 @@ filter="url(#glow)"
 
         // ----- SEQUENCE: 1) loading -> 2) landing -> 3) play -> gameUI
         window.addEventListener('load', () => {
-            // simulate asset loading (2 seconds), then hide loading, show landing
+            // simulate asset loading (1 seconds), then hide loading, show landing
             setTimeout(() => {
                 // hide loading...
                 loadingScreen.classList.add('hidden');
                 // show landing page...
                 landingScreen.classList.remove('hidden');
-            }, 2000); // 2 sec loading animation
+            }, 1000); // 1 sec loading animation
         });
 
         // when player clicks PLAY... hide landing, show game UI and start
