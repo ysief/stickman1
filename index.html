@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stickman Bridge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+
+        :root {
+            --bg-gradient: radial-gradient(circle at 30% 30%, #2b2f4c, #1a1c2c);
+            --text-color: #ffffff;
+            --panel-bg: rgba(46, 51, 78, 0.7);
+            --overlay-bg: rgba(18, 20, 30, 0.96);
+            --button-bg: #ffb347; 
+            --button-text: #1e1f2e;
+            --shadow: rgba(0, 0, 0, 0.5);
+            --pillar-color: #3d4260;
+            --hero-color: #ffffff;
+            --stick-color: #ffe066;
+            --scarf-color: #ff6f91;
+            --perfect-color: #5bd6ff;
+            --shadow-color: rgb(255, 225, 117); 
+        }
+
+        body {
+            margin: 0; padding: 0; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            background: var(--bg-gradient); font-family: 'Nunito', sans-serif;
+            color: var(--text-color); overflow: hidden; flex-direction: column;
+            user-select: none; -webkit-user-select: none; touch-action: none;
+        }
+
+        /* ----- loading screen hehe 🙃----- */
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0d0e17; 
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 40; 
+            text-align: center; padding: 20px; box-sizing: border-box;
+            transition: opacity 0.6s ease;
+            background-image: radial-gradient(rgba(255,215,100,0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        #loading-screen.hidden { opacity: 0; pointer-events: none; }
+
+.loading-spinner {
+            width: 80px; height: 80px; margin: 30px auto;
+            border: 6px solid rgba(255,200,100,0.2);
+            border-top: 6px solid #ffb347;
+            border-right: 6px solid #5bd6ff;
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            box-shadow: 0 0 35px #ffb347, 0 0 15px #5bd6ff;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .loading-text {
+            font-size: 1.2rem; letter-spacing: 4px; font-weight: 700;
+            background: linear-gradient(45deg, #ffd966, #5bd6ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: pulseGlow 1.5s ease infinite;
+        }
+        @keyframes pulseGlow { 0% { opacity: 0.6; } 50% { opacity: 1; text-shadow: 0 0 18px #ffd966; } 100% { opacity: 0.6; } }
+
+        /* ----- landing PAGE 📄..... */
+        .landing {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--overlay-bg); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 30;
+            text-align: center; padding: 20px; box-sizing: border-box;
+            transition: opacity 0.5s; backdrop-filter: blur(8px);
+            background-image: radial-gradient(rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .landing.hidden { opacity: 0; pointer-events: none; }
+
+        .stickman-logo {
+            max-width: 90%; max-height: 45vh; object-fit: contain; 
+            margin-bottom: 20px; filter: drop-shadow(0 0 20px rgba(255, 180, 70, 0.3));
+        }
+
+        h1 { 
+            font-size: 4rem; margin: 0 0 10px 0; 
+            background: linear-gradient(135deg, #ffe99c, #ffd27f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px #ffb34760;
+            line-height: 1; font-weight: 900; letter-spacing: 3px;
+            filter: drop-shadow(0 6px 0 #10121e);
+        }
+
+        .landing p { 
+            font-size: 1.1rem; margin-bottom: 40px; font-weight: 400; 
+            opacity: 0.9; max-width: 500px; 
+        }
+
+        .btn-main {
+            background: var(--button-bg); color: var(--button-text); border: none;
+            padding: 18px 60px; font-size: 1.3rem; border-radius: 60px; cursor: pointer;
+            font-weight: 800; box-shadow: 0 8px 0 #7f4f1a, 0 10px 30px #ffb34760; 
+            transition: transform 0.1s, box-shadow 0.1s;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            border: 2px solid #ffe49e;
+        }
+        
+        .btn-main:active { transform: translateY(5px); box-shadow: 0 4px 0 #7f4f1a, 0 15px 30px #ffb347; }
+
+        .game-container {
+            width: 100%; max-width: 450px; height: 90vh; display: flex;
+            flex-direction: column; justify-content: flex-start;
+            padding: 20px; box-sizing: border-box; position: relative;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .game-container.visible { opacity: 1; pointer-events: auto; }
+
+        .header {
+            display: flex; justify-content: space-around; gap: 15px; margin-bottom: 20px;
+            background: var(--panel-bg); padding: 15px 20px; border-radius: 40px;
+            backdrop-filter: blur(10px); box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+            z-index: 5; border: 1px solid rgba(255,230,170,0.2);
+        }
+
+        .stat-box { display: flex; flex-direction: column; align-items: center; min-width: 60px; }
+        .stat-box h2 { margin: 0; font-size: 11px; text-transform: uppercase; opacity: 0.7; font-weight: 800; letter-spacing: 2px; color: #c7d1ff; }
+        .stat-box span { font-size: 32px; font-weight: 900; line-height: 1.1; text-shadow: 0 0 8px #ffd966; }
+
+        .streak-active { color: #5bd6ff; text-shadow: 0 0 10px #5bd6ff; }
+
+        #canvas-wrapper {
+            flex-grow: 1; width: 100%; position: relative; border-radius: 32px;
+            border: 2px solid rgba(255, 230, 140, 0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            overflow: hidden; background: linear-gradient(180deg, rgba(255,240,200,0.03) 0%, transparent 100%);
+        }
+
+        #gameCanvas { width: 100%; height: 100%; display: block; }
+
+        .footer { position: absolute; bottom: 10px; font-size: 12px; opacity: 0.2; font-weight: 700; letter-spacing: 2px; width: 100%; text-align: center; pointer-events: none; color: #ffefc0;}
+
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        /* game over screen 🥀*/
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--overlay-bg); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 25;
+            text-align: center; padding: 20px; box-sizing: border-box;
+            transition: opacity 0.4s; backdrop-filter: blur(8px);
+            background-image: radial-gradient(rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .overlay.hidden { opacity: 0; pointer-events: none; }
+
+        svg {
+             max-width: 80%;
+             height: auto;
+            }
+
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text"> ucup <br> loading woi . . .</div>
+    </div>
+
+    <div class="landing hidden" id="landing-screen">
+        <img src="https://i.ibb.co/wZGMGQ3v/1773158540508.png" class="stickman-logo" alt="Stickman">
+        <!-- <h1>STICKMAN BRIDGE</h1> -->
+
+        <svg viewBox="0 0 920 180" width="900" height="170" xmlns="http://www.w3.org/2000/svg">
+
+<defs>
+
+<!-- Gold Gradient -->
+<linearGradient id="titleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+<stop offset="0%" stop-color="#ffe99c"/>
+<stop offset="100%" stop-color="#ffd27f"/>
+</linearGradient>
+
+<!-- Glow -->
+<filter id="glow">
+<feGaussianBlur stdDeviation="3.5" result="blur"/>
+<feMerge>
+<feMergeNode in="blur"/>
+<feMergeNode in="SourceGraphic"/>
+</feMerge>
+</filter>
+
+</defs>
+
+<!-- ST CKMAN -->
+<text
+x="20"
+y="95"
+font-size="80"
+font-weight="900"
+letter-spacing="7"
+fill="url(#titleGradient)"
+filter="url(#glow)"
+font-family="'Nunito', sans-serif">
+ST CKMAN
+</text>
+
+<!-- I -->
+<g transform="translate(145,30)"
+stroke="url(#titleGradient)"
+stroke-width="9"
+
+stroke-linecap="round"
+filter="url(#glow)">
+
+<!-- head -->
+<circle cx="0" cy="12" r="7" fill="url(#titleGradient)"/>
+
+<!-- body -->
+<line x1="0" y1="19" x2="0" y2="55"/>
+
+<!-- arms -->
+<line x1="0" y1="30" x2="-15" y2="42"/>
+<line x1="0" y1="30" x2="15" y2="42"/>
+
+<!-- legs -->
+<line x1="0" y1="50" x2="-12" y2="65"/>
+<line x1="0" y1="50" x2="12" y2="65"/>
+
+</g>
+
+<!-- BRIDGE text -->
+<text
+x="550"
+y="95"
+font-size="80"
+font-weight="900"
+letter-spacing="7"
+fill="url(#titleGradient)"
+filter="url(#glow)"
+font-family="'Nunito', sans-serif">
+BRIDGE
+</text>
+
+<!-- Bridge underline -->
+<!-- <path
+d="M580 110 Q650 80 720 110 Q760 130 910 105"
+stroke="url(#titleGradient)"
+stroke-width="8"
+fill="none"
+stroke-linecap="round"
+filter="url(#glow)"
+/> -->
+</svg>
+
+
+        <p>Hold <span style="color: #ffb347; font-weight: bold; text-shadow: 0 0 10px var(--shadow-color)">SCREEN</span> to stretch & release to drop.<br>Land in the <span style="color: #5bd6ff; text-shadow: 0 0 10px var(--perfect-color)">CYAN ZONE</span> for PERFECT!</p> 
+        <button class="btn-main" id="play-button">PLAY NOW</button>
+    </div>
+
+    <div class="overlay hidden" id="game-over-screen">
+        <h1 style="-webkit-text-fill-color: white; background: none; text-shadow: 0 0 15px white;">LOST BALANCE</h1>
+        <p>
+            Score: <span id="final-score" style="font-weight: bold; color: #ffb347;">0</span><br>
+            <span style="font-size: 0.9em; opacity: 0.6;">(Best: <span id="final-hs">0</span>)</span>
+        </p>
+        <button class="btn-main" onclick="startGame()">TRY AGAIN</button>
+    </div>
+
+    <div class="game-container" id="game-wrap">
+        <div class="header">
+            <div class="stat-box"><h2>Score</h2><span id="score">0</span></div>
+            <div class="stat-box"><h2>Best</h2><span id="hs">0</span></div>
+            <div class="stat-box"><h2>Streak</h2><span id="streak">0</span></div>
+        </div>
+        <div id="canvas-wrapper"><canvas id="gameCanvas"></canvas></div>
+    </div>
+
+    <div class="footer">© ucup</div>
+
+    <script>
+ 
+        const qs = id => document.getElementById(id);
+        const scoreEl = qs('score'), hsEl = qs('hs'), streakEl = qs('streak');
+        const finalHsEl = qs('final-hs'), finalScoreEl = qs('final-score');
+        const landingScreen = qs('landing-screen');
+        const gameOverScreen = qs('game-over-screen');
+        const loadingScreen = qs('loading-screen');
+        const gameWrap = qs('game-wrap');
+        const playBtn = qs('play-button');
+        const canvas = qs('gameCanvas'), ctx = canvas.getContext('2d');
+
+        let score = 0, streak = 0, highScore = 0;
+        hsEl.innerText = highScore;
+
+        let theme = {};
+        const updateColors = () => {
+            const style = getComputedStyle(document.body);
+            const getCol = prop => style.getPropertyValue(prop).trim();
+            theme = { pillar: getCol('--pillar-color'), hero: getCol('--hero-color'), stick: getCol('--stick-color'), scarf: getCol('--scarf-color'), perfect: getCol('--perfect-color'), text: getCol('--text-color'), button: getCol('--button-bg') };
+        };
+        updateColors();
+
+        let phase = "waiting", stickLen = 0, stickAng = -90, fallVel = 0, wobble = 0;
+        let heroX = 0, heroY = 0, pillars = [], particles = [], floatTexts = [], camX = 0, animId;
+        
+        const w = canvas.width = 400, h = canvas.height = 600, pHeight = 250, hSize = 20, pZone = 12, maxStick = 330;
+
+        const clouds = Array.from({length: 6}, () => ({ x: Math.random() * w, y: 50 + Math.random() * 200, size: 20 + Math.random() * 25, speed: 0.1 + Math.random() * 0.2, alpha: 0.06 + Math.random() * 0.1 }));
+
+        const spawnLeaves = (x, y) => { for(let i=0; i<15; i++) particles.push({ x, y, vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 1) * 6, life: 1, size: 2 + Math.random() * 3, col: theme.perfect }); };
+        
+        const spawnSpark = (x, y) => particles.push({ 
+            x: x + (Math.random() * 8 - 4), y: y - 4, 
+            vx: (Math.random() - 0.5) * 2, vy: -0.5 - Math.random() * 3, 
+            life: 1, size: 2 + Math.random() * 3, col: '#ffe066'
+        });
+
+        const spawnText = (x, y, txt, col) => floatTexts.push({ x, y, txt, col, life: 1, vy: -1.5 });
+
+        const updateStreakUI = () => { streakEl.innerText = streak; streak > 0 ? streakEl.classList.add('streak-active') : streakEl.classList.remove('streak-active'); };
+
+        const initGame = () => {
+            score = streak = 0; scoreEl.innerText = score; updateStreakUI();
+            phase = "waiting"; camX = stickLen = wobble = fallVel = 0; stickAng = -90; particles = []; floatTexts = [];
+            pillars = [{ x: 0, w: 80, px: 0 }, { x: 150 + Math.random() * 100, w: 30 + Math.random() * 50 }];
+            pillars[1].px = pillars[1].x + pillars[1].w/2 - pZone/2;
+            heroX = pillars[0].w - 10; heroY = h - pHeight;
+            if (animId) cancelAnimationFrame(animId);
+            gameLoop();
+        };
+
+        // ----- SEQUENCE: 1) loading -> 2) landing -> 3) play -> gameUI
+        window.addEventListener('load', () => {
+            // simulate asset loading (2 seconds), then hide loading, show landing
+            setTimeout(() => {
+                // hide loading...
+                loadingScreen.classList.add('hidden');
+                // show landing page...
+                landingScreen.classList.remove('hidden');
+            }, 2000); // 2 sec loading animation
+        });
+
+        // when player clicks PLAY... hide landing, show game UI and start
+        playBtn.addEventListener('click', () => {
+            landingScreen.classList.add('hidden');
+            gameWrap.classList.add('visible');   // make game container visible
+            gameOverScreen.classList.add('hidden');
+            initGame();
+        });
+
+        // also used by try again button
+        window.startGame = () => {
+            landingScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            gameWrap.classList.add('visible');
+            initGame();
+        };
+
+        const endGame = () => {
+            if(score > highScore) { highScore = score; }
+            finalScoreEl.innerText = score; finalHsEl.innerText = hsEl.innerText = highScore;
+            setTimeout(() => {
+                gameOverScreen.classList.remove('hidden');
+                const cw = qs('canvas-wrapper');
+                cw.classList.remove('shake'); void cw.offsetWidth; cw.classList.add('shake');
+            }, 600);
+        };
+
+        window.addEventListener('pointerdown', e => {
+            if(e.target.tagName === 'BUTTON') return;
+            if(phase === "waiting" && gameWrap.classList.contains('visible') && gameOverScreen.classList.contains('hidden')) { 
+                phase = "stretching"; stickLen = fallVel = 0; stickAng = -90; 
+            }
+        });
+        window.addEventListener('pointerup', () => { if(phase === "stretching") phase = "falling"; });
+
+        const gameLoop = () => { update(); draw(); animId = requestAnimationFrame(gameLoop); };
+
+        const update = () => {
+            particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= 0.02; }); particles = particles.filter(p => p.life > 0);
+            floatTexts.forEach(t => { t.y += t.vy; t.life -= 0.015; }); floatTexts = floatTexts.filter(t => t.life > 0);
+
+            if(phase === "stretching") {
+                stickLen += 3.5; if(Math.random() > 0.4) spawnSpark(pillars[0].x + pillars[0].w, h - pHeight);
+                if(stickLen > maxStick) { spawnText(heroX + 30, heroY - 70, "Don't act smart!", theme.perfect); phase = "falling"; }
+            } else if(phase === "falling") {
+                fallVel += 0.4; stickAng += fallVel;
+                if(stickAng >= 0) { stickAng = 0; wobble = 15; phase = "walking"; }
+            } else if(phase === "walking") {
+                heroX += 4; if(wobble > 0) wobble--;
+                let tipX = pillars[0].x + pillars[0].w + stickLen, nextP = pillars[1], success = (tipX >= nextP.x && tipX <= nextP.x + nextP.w);
+                if(success) {
+                    let destX = nextP.x + nextP.w - 10;
+                    if(heroX >= destX) {
+                        heroX = destX;
+                        if(tipX >= nextP.px && tipX <= nextP.px + pZone) {
+                            score += 2; streak++; spawnLeaves(tipX, h - pHeight);
+                            spawnText(heroX, heroY - 50, streak > 1 ? `PERFECT +2 (${streak}x STREAK!)` : "PERFECT +2", streak > 1 ? theme.perfect : theme.button);
+                        } else { score += 1; streak = 0; spawnText(heroX, heroY - 50, "+1", theme.text); }
+                        scoreEl.innerText = score; updateStreakUI(); phase = "transitioning";
+                    }
+                } else { if(heroX >= tipX) { heroX = tipX; phase = "fallingDown"; } }
+            } else if(phase === "transitioning") {
+                camX += 6; clouds.forEach(c => c.x -= 0.5);
+                let dist = pillars[1].x + pillars[1].w - 80;
+                if(camX >= dist) {
+                    let oldNext = pillars[1], newW = 30 + Math.max(10, 50 - (score * 0.5)), newX = oldNext.x - dist + 80 + Math.random() * 150;
+                    pillars = [{ x: oldNext.x - dist, w: oldNext.w, px: 0 }, { x: newX, w: newW, px: newX + newW/2 - pZone/2 }];
+                    heroX -= dist; particles.forEach(p => p.x -= dist); floatTexts.forEach(t => t.x -= dist);
+                    camX = stickLen = 0; stickAng = -90; phase = "waiting";
+                }
+            } else if(phase === "fallingDown") {
+                heroY += 12; stickAng += 3;
+                if(heroY > h + 100) { phase = "gameover"; streak = 0; updateStreakUI(); endGame(); }
+            }
+        };
+
+        const drawClouds = () => {
+            clouds.forEach(c => {
+                c.x -= c.speed; if(c.x < -100) { c.x = w + 50; c.y = 50 + Math.random() * 200; }
+                ctx.fillStyle = `rgba(255, 250, 210, ${c.alpha})`; ctx.beginPath();
+                ctx.arc(c.x, c.y, c.size, 0, Math.PI * 2); ctx.arc(c.x + c.size * 0.8, c.y - c.size * 0.3, c.size * 0.8, 0, Math.PI * 2); ctx.arc(c.x + c.size * 1.5, c.y, c.size * 0.6, 0, Math.PI * 2); ctx.fill();
+            });
+        };
+
+        const draw = () => {
+            ctx.clearRect(0, 0, w, h); drawClouds(); ctx.save(); ctx.translate(-camX, 0);
+            pillars.forEach(p => {
+                ctx.fillStyle = theme.pillar; ctx.fillRect(p.x, h - pHeight, p.w, pHeight);
+                if(p.px) { 
+                    ctx.shadowColor = '#5bd6ff'; ctx.shadowBlur = 10; 
+                    ctx.fillStyle = '#5bd6ff'; ctx.fillRect(p.px, h - pHeight, pZone, 7); 
+                    ctx.shadowBlur = 0;
+                }
+            });
+
+            if(stickLen > 0) {
+                ctx.save(); ctx.translate(pillars[0].x + pillars[0].w, h - pHeight);
+                ctx.rotate((stickAng + (wobble > 0 ? Math.sin(wobble * 0.8) * (wobble * 0.15) : 0)) * Math.PI / 180);
+                ctx.shadowColor = '#ffe066'; ctx.shadowBlur = 12;
+                ctx.fillStyle = '#ffe066'; ctx.fillRect(0, -4, stickLen, 4);
+          
